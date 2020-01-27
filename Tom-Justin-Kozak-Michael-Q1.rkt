@@ -73,7 +73,7 @@
 ;; pre-order-traverse: bintree, int -> b-list
 ;; <b-list> ::== <bintree> | <int>
 ;; Purpose: to traverse a bintree using pre-order traversal (root, left, right)
-;; Accumulative Invariant: count is the number of leaves processed until the next recursion
+;; Accumulative Invariant: count is the number of leaves processed
 (define pre-order-traverse
   (lambda (bintree count)
     (if (number? bintree) (cons (leaf count) (+ count 1))
