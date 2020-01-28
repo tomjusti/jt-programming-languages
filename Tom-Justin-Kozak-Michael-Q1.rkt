@@ -72,7 +72,8 @@
 
 ;; pre-order-traverse: bintree, int -> b-list
 ;; <b-list> ::== <bintree> & <int>
-;; Purpose: to traverse a bintree using pre-order traversal (root, left, right)
+;; Purpose: to return a list where car is a bintree (see purpose in number-leaves) and cadr is the number of leaves in the bintree
+;; by using pre-order traversal (root, left, right)
 ;; Accumulative Invariant: count is the number of leaves processed
 (define pre-order-traverse
   (lambda (bintree count)
