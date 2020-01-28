@@ -77,11 +77,11 @@
 (define pre-order-traverse
   (lambda (bintree count)
     (if (number? bintree) (cons (leaf count) (+ count 1))
-        (letrec ([lcount (pre-order-traverse (cadr bintree) count)]
-                 [rcount (pre-order-traverse (caddr bintree) (cdr lcount))])
+        (letrec ([left (pre-order-traverse (cadr bintree) count)]
+                 [right (pre-order-traverse (caddr bintree) (cdr left))])
           (cons
-           (interior-node (contents-of bintree) (car lcount) (car rcount))
-           (cdr rcount))))))
+           (interior-node (contents-of bintree) (car left) (car right))
+           (cdr right))))))
 
 (check-expect (pre-order-traverse
                (interior-node 'foo
@@ -95,7 +95,7 @@
                  (interior-node 'bar (leaf 26) (leaf 12))
                  (interior-node 'baz (leaf 11) (interior-node 'quux (leaf 117) (leaf 14)))))
               '(foo (bar 0 1) (baz 2 (quux 3 4)))) ;; example from the book
-(check-expect (number-leaves (interior-node 'a (interior-node 'b (leaf 3) (leaf 2)) (leaf 3))) '(a (b 0 1) 2))
+(check-expect (number-leaves (interior-node 'cest (interior-node 'la-vie (leaf 3) (leaf 2)) (leaf 3))) '(cest (la-vie 0 1) 2))
 (check-expect (number-leaves (leaf 3)) 0)
 
 
