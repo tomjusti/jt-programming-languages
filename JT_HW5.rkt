@@ -33,15 +33,14 @@
 
     (expression 
      ("let" identifier "=" expression "in" expression) let-exp)
+
+    (expression ("cond" "(" expression "==>" expression ")*" "end") cond)
     
     (expression 
      ("new-let" (arbno "(" identifier "=" expression ")*") "in" expression) new-let-exp)
 
     (expression 
      ("let*" (arbno "(" identifier "=" expression ")*") "in" expression) let*-exp)
-
-
-    (expression ("cond" "(" expression "==>" expression ")*" "end") cond)
     
     ))
 
@@ -202,6 +201,12 @@
              (let ((val1 (value-of exp1 env)))
                (value-of body
                          (extend-env var val1 env))))
+
+    (cond (exp1 exp2)
+          (let ((val1 (value-of exp1 env)))
+            (if (expval->bool val1)
+                (value-of exp2 env)
+                (eopl:error "The expression is false!")))))
     
     (new-let-exp (var exp1 body)
       (let ((values (map (lambda (expr) (value-of expr env)) exp1)))
@@ -211,14 +216,7 @@
     (let*-exp (var exp1 body)
       (let ((values (map (lambda (expr) (value-of expr env)) exp1)))
         (value-of body
-                  (extend-env*-for-let* var values env))))
-    
-    (cond (exp1 exp2)
-          (let ((val1 (value-of exp1 env)))
-            (if (expval->bool val1)
-                (value-of exp2 env)
-                (eopl:error "expression not true")))))
-                  
+                  (extend-env*-for-let* var values env))))       
     
   )
 
@@ -234,15 +232,6 @@
 ; (eval "-(x, v)")
 ; (eval "if zero?(-(x, x)) then x else 2")
 ; (eval "if zero?(-(x, v)) then x else 2")
-; (eval "new-let (x = 2)* in -(x, 2)")
-
-(eval
- "new-let (x = 30)*
-  in new-let (x = -(x,1))*
-         (y = -(x,2))*
-  in -(x,y)")
-
-(check-expect (eval "cond (zero?(0) ==> 2)* end") (num-val 2))
 
 (check-expect (eval "if zero?(1) then 1 else 2")
               (num-val 2))
