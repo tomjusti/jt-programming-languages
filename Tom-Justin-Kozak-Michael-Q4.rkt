@@ -22,7 +22,7 @@
     
     (expression (number) const-exp)
     
-    (expression("-" "(" expression "," expression ")")diff-exp)
+    (expression ("-" "(" expression "," expression ")") diff-exp)
     
     (expression ("zero?" "(" expression ")") zero?-exp)
     
@@ -30,17 +30,26 @@
      ("if" expression "then" expression "else" expression) if-exp)
     
     (expression (identifier) var-exp)
-
+    
     (expression 
      ("let" identifier "=" expression "in" expression) let-exp)
 
-    (expression ("cond" "(" expression "==>" expression ")*" "end") cond-exp)
-    
-    (expression 
-     ("new-let" (arbno "(" identifier "=" expression ")*") "in" expression) new-let-exp)
+    (expression
+     ("minus" "(" expression ")") minus-exp)
 
-    (expression 
-     ("let*" (arbno "(" identifier "=" expression ")*") "in" expression) let*-exp)
+    (expression ("+" "(" expression "," expression ")") addition-exp)
+
+    (expression ("*" "(" expression "," expression ")") multiplication-exp)
+
+    (expression ("quotient" "(" expression "," expression ")") quotient-exp)
+
+    (expression ("modulo" "(" expression "," expression ")") modulo-exp)
+
+    (expression ("equal?" "(" expression "," expression ")") equal?-exp)
+
+    (expression ("greater?" "(" expression "," expression ")") greater?-exp)
+
+    (expression ("less?" "(" expression "," expression ")") less?-exp)
     
     ))
 
@@ -64,16 +73,16 @@
 (define (empty-env-record) '())
 
 (define (extended-env-record sym val old-env)
-  (cons (list sym val) old-env))
+    (cons (list sym val) old-env))
 
 (define empty-env-record? null?)
 
 (define (environment? x)
-  (or (empty-env-record? x)
-      (and (pair? x)
-           (symbol? (car (car x)))
-           (expval? (cadr (car x)))
-           (environment? (cdr x)))))
+    (or (empty-env-record? x)
+        (and (pair? x)
+             (symbol? (car (car x)))
+             (expval? (cadr (car x)))
+             (environment? (cdr x)))))
 
 (define (extended-env-record->sym r) (car (car r)))
 
@@ -96,19 +105,6 @@
   (lambda (sym val old-env)
     (extended-env-record sym val old-env)))
 
-(define extend-env*
-  (lambda (symbols values old-env)
-    (if (null? symbols) old-env
-        (extend-env* (cdr symbols) (cdr values) (extend-env (car symbols) (car values) old-env)))))
-
-(define extend-env*-for-let*
-  (lambda (symbols values old-env)
-    (if (null? (cdr symbols)) (extend-env (car symbols) (car values) old-env)
-      (begin
-        (extend-env (car symbols) (car values) old-env)
-        (extend-env*-for-let* (cdr symbols) (cdr values) old-env)))))
-
-  
 (define apply-env
   (lambda (env search-sym)
     (if (empty-env? env)
@@ -202,23 +198,62 @@
                (value-of body
                          (extend-env var val1 env))))
 
-    (cond-exp (exp1 exp2)
-          (let ((val1 (value-of exp1 env)))
-            (if (expval->bool val1)
-                (value-of exp2 env)
-                (eopl:error "The expression is false!"))))
-    
-    (new-let-exp (var exp1 body)
-      (let ((values (map (lambda (expr) (value-of expr env)) exp1)))
-        (value-of body
-                  (extend-env* var values env))))
+    (minus-exp (exp1)
+                  (let ((val1 (value-of exp1 env)))
+                    (let ((num1 (expval->num val1)))
+                      (num-val (* num1 -1)))))
 
-    (let*-exp (var exp1 body)
-      (let ((values (map (lambda (expr) (value-of expr env)) exp1)))
-        (value-of body
-                  (extend-env*-for-let* var values env))))       
+    (addition-exp (exp1 exp2)
+                  (let ((val1 (value-of exp1 env))
+                        (val2 (value-of exp2 env)))
+                    (let ((num1 (expval->num val1))
+                          (num2 (expval->num val2)))
+                      (num-val (+ num1 num2)))))
+
+    (multiplication-exp (exp1 exp2)
+                  (let ((val1 (value-of exp1 env))
+                        (val2 (value-of exp2 env)))
+                    (let ((num1 (expval->num val1))
+                          (num2 (expval->num val2)))
+                      (num-val (* num1 num2)))))
+
+
+    (quotient-exp (exp1 exp2)
+                  (let ((val1 (value-of exp1 env))
+                        (val2 (value-of exp2 env)))
+                    (let ((num1 (expval->num val1))
+                          (num2 (expval->num val2)))
+                      (num-val (quotient num1 num2)))))
+
+    (modulo-exp (exp1 exp2)
+                 (let ((val1 (value-of exp1 env))
+                       (val2 (value-of exp2 env)))
+                   (let ((num1 (expval->num val1))
+                         (num2 (expval->num val2)))
+                     (num-val (modulo num1 num2)))))
+
+    (equal?-exp (exp1 exp2)
+                 (let ((val1 (value-of exp1 env))
+                       (val2 (value-of exp2 env)))
+                   (let ((num1 (expval->num val1))
+                         (num2 (expval->num val2)))
+                     (bool-val (= num1 num2)))))
+
+    (greater?-exp (exp1 exp2)
+                 (let ((val1 (value-of exp1 env))
+                       (val2 (value-of exp2 env)))
+                   (let ((num1 (expval->num val1))
+                         (num2 (expval->num val2)))
+                     (bool-val (> num1 num2)))))
+
+    (less?-exp (exp1 exp2)
+                 (let ((val1 (value-of exp1 env))
+                       (val2 (value-of exp2 env)))
+                   (let ((num1 (expval->num val1))
+                         (num2 (expval->num val2)))
+                     (bool-val (< num1 num2)))))
     
-  ))
+    ))
 
 ;;;;;;   EVALUATION WRAPPERS
 
@@ -232,6 +267,7 @@
 ; (eval "-(x, v)")
 ; (eval "if zero?(-(x, x)) then x else 2")
 ; (eval "if zero?(-(x, v)) then x else 2")
+; (eval "let x = 2 in -(x, 2)")
 
 (check-expect (eval "if zero?(1) then 1 else 2")
               (num-val 2))
@@ -243,9 +279,5 @@
               (num-val 2))
 (check-expect (eval "let x = 2 in -(x, 2)")
               (num-val 0))
-(check-expect (eval "new-let (x = 30)* in new-let (x = -(x,1))* (y = -(x,2))* in -(x,y)")
-              (num-val 1))
-(check-expect (eval "let* (x = 30)* in let* (x = -(x,1))* (y = -(x,2))* in -(x,y)")
-              (num-val 2))
 
 (test)

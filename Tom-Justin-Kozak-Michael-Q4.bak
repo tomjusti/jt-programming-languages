@@ -30,17 +30,9 @@
      ("if" expression "then" expression "else" expression) if-exp)
     
     (expression (identifier) var-exp)
-
-    (expression 
-     ("let" identifier "=" expression "in" expression) let-exp)
-
-    (expression ("cond" "(" expression "==>" expression ")*" "end") cond-exp)
     
     (expression 
-     ("new-let" (arbno "(" identifier "=" expression ")*") "in" expression) new-let-exp)
-
-    (expression 
-     ("let*" (arbno "(" identifier "=" expression ")*") "in" expression) let*-exp)
+     ("let" identifier "=" expression "in" expression) let-exp)   
     
     ))
 
@@ -64,16 +56,16 @@
 (define (empty-env-record) '())
 
 (define (extended-env-record sym val old-env)
-  (cons (list sym val) old-env))
+    (cons (list sym val) old-env))
 
 (define empty-env-record? null?)
 
 (define (environment? x)
-  (or (empty-env-record? x)
-      (and (pair? x)
-           (symbol? (car (car x)))
-           (expval? (cadr (car x)))
-           (environment? (cdr x)))))
+    (or (empty-env-record? x)
+        (and (pair? x)
+             (symbol? (car (car x)))
+             (expval? (cadr (car x)))
+             (environment? (cdr x)))))
 
 (define (extended-env-record->sym r) (car (car r)))
 
@@ -96,19 +88,6 @@
   (lambda (sym val old-env)
     (extended-env-record sym val old-env)))
 
-(define extend-env*
-  (lambda (symbols values old-env)
-    (if (null? symbols) old-env
-        (extend-env* (cdr symbols) (cdr values) (extend-env (car symbols) (car values) old-env)))))
-
-(define extend-env*-for-let*
-  (lambda (symbols values old-env)
-    (if (null? (cdr symbols)) (extend-env (car symbols) (car values) old-env)
-      (begin
-        (extend-env (car symbols) (car values) old-env)
-        (extend-env*-for-let* (cdr symbols) (cdr values) old-env)))))
-
-  
 (define apply-env
   (lambda (env search-sym)
     (if (empty-env? env)
@@ -201,24 +180,8 @@
              (let ((val1 (value-of exp1 env)))
                (value-of body
                          (extend-env var val1 env))))
-
-    (cond-exp (exp1 exp2)
-          (let ((val1 (value-of exp1 env)))
-            (if (expval->bool val1)
-                (value-of exp2 env)
-                (eopl:error "The expression is false!"))))
     
-    (new-let-exp (var exp1 body)
-      (let ((values (map (lambda (expr) (value-of expr env)) exp1)))
-        (value-of body
-                  (extend-env* var values env))))
-
-    (let*-exp (var exp1 body)
-      (let ((values (map (lambda (expr) (value-of expr env)) exp1)))
-        (value-of body
-                  (extend-env*-for-let* var values env))))       
-    
-  ))
+    ))
 
 ;;;;;;   EVALUATION WRAPPERS
 
@@ -232,6 +195,7 @@
 ; (eval "-(x, v)")
 ; (eval "if zero?(-(x, x)) then x else 2")
 ; (eval "if zero?(-(x, v)) then x else 2")
+; (eval "let x = 2 in -(x, 2)")
 
 (check-expect (eval "if zero?(1) then 1 else 2")
               (num-val 2))
@@ -243,9 +207,6 @@
               (num-val 2))
 (check-expect (eval "let x = 2 in -(x, 2)")
               (num-val 0))
-(check-expect (eval "new-let (x = 30)* in new-let (x = -(x,1))* (y = -(x,2))* in -(x,y)")
-              (num-val 1))
-(check-expect (eval "let* (x = 30)* in let* (x = -(x,1))* (y = -(x,2))* in -(x,y)")
-              (num-val 2))
 
 (test)
+
