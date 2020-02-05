@@ -41,9 +41,9 @@
 
     (expression ("*" "(" expression "," expression ")") multiplication-exp)
 
-    (expression ("quotient" "(" expression "," expression ")") quotient-exp)
+    (expression ("/" "(" expression "," expression ")") quotient-exp)
 
-    (expression ("modulo" "(" expression "," expression ")") modulo-exp)
+    (expression ("%" "(" expression "," expression ")") modulo-exp)
 
     (expression ("equal?" "(" expression "," expression ")") equal?-exp)
 
