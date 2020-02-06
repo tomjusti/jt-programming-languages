@@ -1,3 +1,5 @@
+;; Justin Tom & Michael Kozak
+
 #lang eopl
 
 (require test-engine/racket-tests)
@@ -43,7 +45,7 @@
 
     (expression ("/" "(" expression "," expression ")") quotient-exp)
 
-    (expression ("%" "(" expression "," expression ")") modulo-exp)
+    (expression ("modulo" "(" expression "," expression ")") modulo-exp)
 
     (expression ("equal?" "(" expression "," expression ")") equal?-exp)
 
@@ -279,5 +281,22 @@
               (num-val 2))
 (check-expect (eval "let x = 2 in -(x, 2)")
               (num-val 0))
+(check-expect (eval "minus(x)")
+              (num-val -10))
+(check-expect (eval "+(x, v)")
+              (num-val 15))
+(check-expect (eval "*(x, v)")
+              (num-val 50))
+(check-expect (eval "/(x, v)")
+              (num-val 2))
+(check-expect (eval "modulo(x, v)")
+              (num-val 0))
+(check-expect (eval "equal?(x, v)")
+              (bool-val #f))
+(check-expect (eval "greater?(x, v)")
+              (bool-val #t))
+(check-expect (eval "less?(x, v)")
+              (bool-val #f))
+
 
 (test)
