@@ -9,7 +9,7 @@
 ; ; (define (g x) (* 2 x))
 ; ; 
 ; ; (check-expect (f 1 2) 3)
-; ; (chekc-expect (g 10) 20)
+; ; (check-expect (g 10) 20)
 ; 
 
 ; Write your answers to Q1 here:
