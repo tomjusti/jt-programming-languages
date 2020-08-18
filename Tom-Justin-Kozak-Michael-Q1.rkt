@@ -70,6 +70,12 @@
 (define (number-leaves bintree)
   (car (pre-order-traverse bintree 0)))
 
+(define (left bintree count)
+  (pre-order-traverse (cadr bintree) count))
+
+(define (right bintree count)
+  (pre-order-traverse (caddr bintree) (cdr (left bintree count))))
+
 ;; pre-order-traverse: bintree, int -> b-list
 ;; <b-list> ::== <bintree> & <int>
 ;; Purpose: to return a list where car is a bintree (see purpose in number-leaves) and cadr is the number of leaves in the bintree
@@ -78,11 +84,9 @@
 (define pre-order-traverse
   (lambda (bintree count)
     (if (number? bintree) (cons (leaf count) (+ count 1))
-        (letrec ([left (pre-order-traverse (cadr bintree) count)]
-                 [right (pre-order-traverse (caddr bintree) (cdr left))])
-          (cons
-           (interior-node (contents-of bintree) (car left) (car right))
-           (cdr right))))))
+        (cons
+         (interior-node (contents-of bintree) (car (left bintree count)) (car (right bintree count)))
+         (cdr (right bintree count))))))
 
 (check-expect (pre-order-traverse
                (interior-node 'foo
